@@ -84,7 +84,7 @@ const out = details.output as { verdict?: string; findings?: unknown[] } | undef
 const ok = plugin.raw("next_tags") === "done" && typeof out?.verdict === "string" && Array.isArray(out?.findings);
 console.log(
   ok
-    ? `\nPASS: {{$.claude.output.findings}} is an array of ${out!.findings!.length}, {{$.claude.output.verdict}} = ${out!.verdict}`
+    ? `\nPASS: {{$.claudeAgent.output.findings}} is an array of ${out!.findings!.length}, {{$.claudeAgent.output.verdict}} = ${out!.verdict}`
     : "\nFAIL: the structured answer did not arrive in the schema's shape",
 );
 process.exit(ok ? 0 : 1);

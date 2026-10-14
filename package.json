@@ -1,5 +1,5 @@
 {
-  "name": "@flomorphic/claude-plugin",
+  "name": "@flomorphic/claude-agent-plugin",
   "version": "0.1.0",
   "description": "FloMorphic plugin node that runs Claude as an agent on the plugin's host — a durable Claude Code session per canvas call site, with a human-in-the-loop outbound port for the questions Claude raises mid-run. Built on @inflowenger/node-plugin-sdk and @anthropic-ai/claude-agent-sdk.",
   "type": "module",

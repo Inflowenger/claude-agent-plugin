@@ -1,5 +1,5 @@
-// Command claude is a FloMorphic plugin node that runs Claude as an agent on the
-// plugin's own host.
+// Command claude-agent is a FloMorphic plugin node that runs Claude as an agent
+// on the plugin's own host.
 //
 // It is unusual among inflow plugins in two ways, and both are the point:
 //
@@ -58,7 +58,7 @@ function loadManual(): string {
   try {
     return readFileSync(join(dirname(fileURLToPath(import.meta.url)), "manual.md"), "utf8");
   } catch (err) {
-    console.warn("claude: manual.md not found, serving an empty manual:", err);
+    console.warn("claude-agent: manual.md not found, serving an empty manual:", err);
     return "";
   }
 }
@@ -75,10 +75,10 @@ async function main(): Promise<void> {
   // One stop registry for the whole plugin: a turn aborted with its flow stops
   // its subprocess instead of carrying on writing to someone's disk.
   const stops = new jobstop.Registry();
-  p.onSignal(chainSignals(logSignals("claude"), stops.onSignal));
+  p.onSignal(chainSignals(logSignals("claude-agent"), stops.onSignal));
 
   p.intro({
-    name: "CLAUDE",
+    name: "CLAUDE AGENT",
     author: "FloMorphic",
     version,
     settings: settingsForm().build(),
@@ -104,7 +104,7 @@ async function main(): Promise<void> {
 
   p.start();
 
-  console.log(`claude plugin ${version} ready: action ${action.method}, ports ${action.outbound?.map((o) => o.tags.join("|")).join(", ")}`);
+  console.log(`claude-agent plugin ${version} ready: action ${action.method}, ports ${action.outbound?.map((o) => o.tags.join("|")).join(", ")}`);
   await reportHost(executable);
 
   // start() only wires subscriptions; the process has to stay alive to serve them.
@@ -121,17 +121,17 @@ async function reportHost(executable?: string): Promise<void> {
   const conn = parseSettings({});
   const where = resolveWorkspace(undefined, conn, process.env.CLAUDE_WORKSPACE_ROOT ?? process.cwd());
   if ("error" in where) {
-    console.warn("claude: no default workspace on this host:", where.error);
+    console.warn("claude-agent: no default workspace on this host:", where.error);
     return;
   }
   try {
     const info = await probe({ cwd: where.cwd, env: agentEnv(conn), executable, withModels: false });
     console.log(
-      `claude: Claude Code ${info.version} on this host, default model ${info.model}, credential ${info.apiKeySource}, workspace root ${where.cwd}`,
+      `claude-agent: Claude Code ${info.version} on this host, default model ${info.model}, credential ${info.apiKeySource}, workspace root ${where.cwd}`,
     );
   } catch (err) {
-    console.warn("claude: Claude Code did not start on this host —", err instanceof Error ? err.message : err);
-    console.warn("claude: nodes will fail until it is installed and logged in, or a settings profile carries an API key");
+    console.warn("claude-agent: Claude Code did not start on this host —", err instanceof Error ? err.message : err);
+    console.warn("claude-agent: nodes will fail until it is installed and logged in, or a settings profile carries an API key");
   }
 }
 

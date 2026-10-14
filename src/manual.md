@@ -1,8 +1,13 @@
-# CLAUDE — an agent node with a human branch
+# CLAUDE AGENT — an agent node with a human branch
 
 This node runs **Claude** as an agent on **this plugin's host**: it reads and
 writes files there, runs commands there, and keeps its conversation there. One
 run of the node is one *turn* of a session that survives between runs.
+
+It is not an LLM node: a model node sends a prompt and returns a completion,
+while this one hands work to an agent that picks its own steps, uses tools, keeps
+its session between runs, and can come back with a question. Use it when the task
+is *do this in this repo*, not *answer this*.
 
 It holds no credential of its own. A settings profile may carry an Anthropic API
 key; when it does not, the agent runs as whatever `claude` on the host is already
@@ -51,9 +56,12 @@ of the flow reads fields instead of parsing prose:
 ```
 
 ```
-{{$.claude.output.findings}}      → the array, for a Loop or a Rule node
-{{$.claude.output.findings[0].severity}}
+{{$.claudeAgent.output.findings}}      → the array, for a Loop or a Rule node
+{{$.claudeAgent.output.findings[0].severity}}
 ```
+
+`claudeAgent` there is this node's own name in the flow — use whatever the node
+is called on your canvas.
 
 ## What the node commits
 

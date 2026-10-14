@@ -1,12 +1,12 @@
-# Claude — `claude`
+# Claude Agent — `claude-agent`
 
 A FloMorphic **plugin node** that runs **Claude as an agent on the plugin's own
 host**, built on [`@inflowenger/node-plugin-sdk`](https://www.npmjs.com/package/@inflowenger/node-plugin-sdk)
 and [`@anthropic-ai/claude-agent-sdk`](https://www.npmjs.com/package/@anthropic-ai/claude-agent-sdk).
 
-It appears on the canvas as a **CLAUDE** node with one action, **Run Claude**, and
-four outbound ports. Two things make it different from every other plugin in this
-repo:
+It appears on the canvas as a **CLAUDE AGENT** node with one action, **Run
+Claude**, and four outbound ports. Two things make it different from every other
+plugin in this repo:
 
 1. **It holds a conversation, not a request.** Each run of the node is one *turn*
    of a durable Claude Code session. The session id is the inflow **job id**, so
@@ -84,9 +84,9 @@ instead of parsing prose:
 ```
 
 ```
-{{$.claude.output.verdict}}            → "fail"
-{{$.claude.output.findings}}           → the array, for a Loop or a Rule node
-{{$.claude.output.findings[0].file}}
+{{$.claudeAgent.output.verdict}}       → "fail"
+{{$.claudeAgent.output.findings}}      → the array, for a Loop or a Rule node
+{{$.claudeAgent.output.findings[0].file}}
 ```
 
 `scripts/e2e-structured.ts` runs that review against a deliberately broken file
