@@ -112,11 +112,23 @@ Free-text fields take `{{$.path}}` tokens, resolved from the run's own context
 before the prompt is sent (`$this` works too, for a node scoped over a list).
 
 - **Task** — what Claude should do.
-- **Where** — *Workspace* (must sit inside the connection's root), *Also readable*.
+- **Where** — *Workspace* (must sit inside the connection's root), *Also readable*
+  (typable rows, with a **List directories** button that offers what is under
+  the root).
+  Both take `{{$.path}}` tokens, resolved before the root is checked, so a node
+  can be pointed at what an upstream node produced — `{{$.clone.path}}`. A
+  workspace that was named and resolves to nothing fails the node rather than
+  falling back to the root, which would hand the agent the whole tree.
 - **Model** — *Model* (with a live **List models** button), *Effort*.
 - **What it may do** — *Permission mode* (`auto` by default: a classifier judges
   each tool call and a person is asked when it cannot decide), *Tools*,
-  *Blocked tools*.
+  *Blocked tools*. The two tool fields are tick-box lists, not empty rows:
+  nobody knows the exact names on a first visit. They start from the names this
+  plugin knows, each labelled with what it does, and **Refresh from host**
+  replaces them with the set the host's own Claude Code advertises — this
+  build's tools, MCP ones included. Ticking nothing leaves Claude Code's
+  default set; a refresh never unticks a value the host no longer offers, it
+  just marks it.
 - **How it ends** — *Max turns* (30), *Max spend*, *Session* (`continue` resumes
   the node's own last conversation, which is what makes the human loop work).
 - **Structured answer** — *Return structured data*, *Answer schema*.
@@ -148,6 +160,8 @@ of the model.
 |---|---|
 | `claude.meta.ping` | Connection test — CLI version, which credential is in use, default model, workspace. Also the settings form's `submitTo`, so saving a profile tests it. |
 | `claude.meta.models` | The models *this host* offers; re-renders the open form with the model field as a drop-down. |
+| `claude.meta.tools` | The tools a run on this host would be offered; re-renders the open form with that set as the tool picker. Serves both *Tools* and *Blocked tools* — the button posts which one it speaks for. |
+| `claude.meta.dirs` | The directories under the connection's workspace root; re-renders *Also readable* as a picker of them. |
 | `claude.meta.sessions` | The sessions already on the host for that workspace, newest first. |
 
 ## Run
@@ -170,6 +184,9 @@ sets one.
 
 ## Safety
 
+- **A resolved-to-nothing workspace fails.** An empty Workspace means the
+  connection's root, so a `{{$.path}}` token the context cannot answer must not
+  quietly become "the whole root tree" — the node fails and names the template.
 - **The workspace root fences the NODE, not yet the agent.** Containment is
   checked before Claude starts — a node pointed outside the root fails, and
   traversal and prefix tricks are rejected (`/srv/ws-evil` is not inside

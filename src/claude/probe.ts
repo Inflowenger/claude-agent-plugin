@@ -30,6 +30,12 @@ export async function probe(opts: {
   env: Record<string, string>;
   executable?: string;
   withModels?: boolean;
+  /**
+   * Boot with Claude Code's own tool set instead of none, so `tools` reports
+   * what a run on this host would actually be offered. Off by default: a
+   * connection test has no use for them, and loading none is quicker.
+   */
+  withTools?: boolean;
 }): Promise<Probe> {
   const startedAt = Date.now();
   const idle = new AbortController();
@@ -55,7 +61,9 @@ export async function probe(opts: {
       cwd: opts.cwd,
       env: opts.env,
       settingSources: [],
-      tools: [],
+      // A run of this node loads no setting sources either, so the default
+      // preset here is exactly the set that run would get.
+      ...(opts.withTools ? {} : { tools: [] }),
       // Nothing here should be remembered: this session is a smoke test.
       persistSession: false,
       ...(opts.executable ? { pathToClaudeCodeExecutable: opts.executable } : {}),

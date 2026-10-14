@@ -63,6 +63,22 @@ of the flow reads fields instead of parsing prose:
 `claudeAgent` there is this node's own name in the flow — use whatever the node
 is called on your canvas.
 
+## Picking, not typing
+
+Three fields on the form take a *set* of values, and none of them is a set
+anyone knows by heart. They are tick-box lists rather than empty rows, and each
+carries a button that fetches the real set from this plugin's host:
+
+| Field | Starts as | The button |
+|---|---|---|
+| **Tools**, **Blocked tools** | the tool names this plugin knows, each with a line saying what it does | **Refresh from host** — the tools the host's own Claude Code advertises, this build's set exactly, MCP tools included |
+| **Also readable** | typable rows, because a path has no fixed set | **List directories** — the directories under the connection's workspace root, which is the only tree these may name anyway |
+
+Ticking nothing under **Tools** leaves Claude Code's default set, which is what
+most nodes want; the moment one is ticked, the set is exactly what is ticked. A
+refresh never unticks anything — a value the host no longer offers stays, marked
+as such, rather than being dropped from a node that works.
+
 ## What the node commits
 
 | Field | When | What |
@@ -92,11 +108,36 @@ The models this host offers (also behind the **List models** button on the form)
 claude.meta.models
 ```
 
+The tools a run on this host would be offered (also behind the **Refresh from
+host** button on the form):
+
+```inflow-meta
+claude.meta.tools
+```
+
 The sessions already on the host, newest first:
 
 ```inflow-meta
 claude.meta.sessions
 ```
+
+## Pointing it at what an upstream node produced
+
+**Workspace** takes `{{$.path}}` tokens like every other free-text field, so the
+node can work in a directory the flow only learns at run time — the checkout a
+clone node just made, a directory per row of a list:
+
+```
+Workspace:  {{$.clone.path}}
+```
+
+The token is resolved before the workspace root is checked, so the fence applies
+to the resolved path. **Also readable** rows resolve the same way.
+
+A workspace that was named and resolves to *nothing* fails the node. It does not
+fall back: an empty Workspace means "the connection's root", and silently handing
+the agent a whole root tree instead of the one directory the flow meant is worse
+than stopping.
 
 ## Running it safely
 

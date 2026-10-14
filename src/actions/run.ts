@@ -78,9 +78,28 @@ async function handleRun(job: Job, executable?: string): Promise<void> {
   }
 
   const conn = parseSettings(input.settings);
-  const where = resolveWorkspace(input.workspace, conn);
+  // The workspace is a path an upstream node produced as often as one typed by
+  // hand — the checkout a clone node just made, a directory per row of a list —
+  // so it carries `{{$.path}}` tokens like every other free-text field, resolved
+  // before the fence is checked.
+  //
+  // A node that NAMED a workspace and got nothing back is an error, not an empty
+  // field: an empty workspace falls back to the connection's root, so without
+  // this the agent would quietly work on the whole root tree instead of the one
+  // directory the flow meant. Failing names the template that came back empty.
+  const wanted = (input.workspace ?? "").trim();
+  const workspace = (await resolveTokens(wanted, job)).trim();
+  if (wanted !== "" && workspace === "") {
+    await fail(
+      job,
+      `workspace ${wanted} resolved to nothing on this run's context — fix the path, or leave Workspace empty to use the connection's root deliberately`,
+      { workspace: wanted },
+    );
+    return;
+  }
+  const where = resolveWorkspace(workspace, conn);
   if ("error" in where) {
-    await fail(job, where.error, { workspace: input.workspace ?? "" });
+    await fail(job, where.error, { workspace });
     return;
   }
 
@@ -93,7 +112,14 @@ async function handleRun(job: Job, executable?: string): Promise<void> {
   // Extra readable directories are fenced by the same root as the workspace, or
   // the fence would leak through a field nobody thinks of as a path.
   const extra: string[] = [];
-  for (const dir of rows(input.additionalDirectories)) {
+  for (const row of rows(input.additionalDirectories)) {
+    const dir = (await resolveTokens(row, job)).trim();
+    if (dir === "") {
+      await fail(job, `also-readable directory ${row} resolved to nothing on this run's context`, {
+        workspace: where.cwd,
+      });
+      return;
+    }
     const resolved = resolveWorkspace(dir, conn);
     if ("error" in resolved) {
       await fail(job, `also-readable directory ${dir}: ${resolved.error}`, { workspace: where.cwd });
@@ -125,6 +151,7 @@ async function handleRun(job: Job, executable?: string): Promise<void> {
   }
 
   const prompt = await resolveTokens(task, job);
+  const house = (await resolveTokens(input.appendSystemPrompt ?? "", job)).trim();
 
   // Progress commands are serialized onto one chain: they must be awaited (an
   // un-awaited command is dropped) but the agent loop cannot wait on the canvas.
@@ -150,7 +177,7 @@ async function handleRun(job: Job, executable?: string): Promise<void> {
       disallowedTools: rows(input.disallowedTools),
       maxTurns,
       maxBudgetUsd: positive(input.maxBudgetUsd),
-      appendSystemPrompt: (input.appendSystemPrompt ?? "").trim() || undefined,
+      appendSystemPrompt: house || undefined,
       askHuman,
       outputSchema: schema,
       executable,

@@ -11,9 +11,14 @@
 import { formkit } from "@inflowenger/node-plugin-sdk";
 import type { FormBuilder } from "@inflowenger/node-plugin-sdk";
 
+import { BUILTIN_TOOLS } from "../claude/tools.js";
+import { multiSelect } from "./pick.js";
+
 export const META_PING = "claude.meta.ping";
 export const META_MODELS = "claude.meta.models";
 export const META_SESSIONS = "claude.meta.sessions";
+export const META_TOOLS = "claude.meta.tools";
+export const META_DIRS = "claude.meta.dirs";
 
 /** The default place a Human in the Loop node leaves its reply. */
 export const DEFAULT_ANSWER_PATH = "$.humanReply";
@@ -88,7 +93,10 @@ export function runForm(): FormBuilder {
         ),
       formkit
         .list("additionalDirectories", "Also readable")
-        .describe("Optional extra directories the agent may read, one per row."),
+        .describe(
+          "Optional extra directories the agent may read. Type a path per row, or press List to pick from what is under the connection's workspace root — anything outside that root is refused before Claude starts.",
+        )
+        .lookup(META_DIRS, "List directories"),
     )
     .group(
       "Model",
@@ -105,14 +113,14 @@ export function runForm(): FormBuilder {
         .describe(
           "`auto` lets a classifier decide each tool call and asks a human when it cannot. `plan` explores without changing anything. `bypassPermissions` approves everything — use it only in a workspace you are willing to lose.",
         ),
-      formkit
-        .list("tools", "Tools")
+      multiSelect("tools", "Tools", BUILTIN_TOOLS)
         .describe(
-          "The built-in tools Claude may use, one per row (Read, Glob, Grep, Edit, Write, Bash, WebSearch…). Empty means Claude Code's default set. AskUserQuestion is added for you whenever the human branch is on.",
-        ),
-      formkit
-        .list("disallowedTools", "Blocked tools")
-        .describe("Tools to withhold even when they are in the default set."),
+          "The tools Claude may use. Tick none for Claude Code's default set; tick any and the set is exactly those. Refresh reads this host's own.",
+        )
+        .lookup(META_TOOLS, "Refresh from host"),
+      multiSelect("disallowedTools", "Blocked tools", BUILTIN_TOOLS)
+        .describe("Tools to withhold even when they are in the default set.")
+        .lookup(META_TOOLS, "Refresh from host"),
     )
     .group(
       "How it ends",
