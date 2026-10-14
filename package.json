@@ -1,0 +1,25 @@
+{
+  "name": "@flomorphic/claude-plugin",
+  "version": "0.1.0",
+  "description": "FloMorphic plugin node that runs Claude as an agent on the plugin's host — a durable Claude Code session per canvas call site, with a human-in-the-loop outbound port for the questions Claude raises mid-run. Built on @inflowenger/node-plugin-sdk and @anthropic-ai/claude-agent-sdk.",
+  "type": "module",
+  "private": true,
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && cp src/manual.md dist/manual.md",
+    "clean": "rm -rf dist",
+    "start": "node dist/main.js",
+    "dev": "tsx src/main.ts",
+    "test": "tsc -p tsconfig.test.json && node --import tsx --test tests/*.test.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.3.299",
+    "@inflowenger/node-plugin-sdk": "^0.2.2",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.0"
+  }
+}
